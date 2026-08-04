@@ -34,6 +34,12 @@ Props:
 Estado interno:
 - Sin estado de negocio; controlado por props.
 
+Renderizado condicional requerido:
+- Si start_date y end_date estan vacios: no aplicar filtros de fecha.
+- Si solo start_date tiene valor: filtrar desde start_date en adelante (end_date indefinido).
+- Si solo end_date tiene valor: filtrar hasta end_date (start_date indefinido).
+- Si start_date > end_date: mostrar error de validacion y evitar actualizar datos con rango invalido.
+
 Dependencias:
 - FacetsResponse para min_date y max_date.
 
@@ -58,6 +64,11 @@ Estado:
 APIs:
 - GET /api/metrics
 - GET /api/metrics/facets
+
+Renderizado condicional requerido:
+- Si loading=true: mostrar estados de carga en KPI y charts.
+- Si error existe: mostrar banner de error sin ocultar toda la pagina.
+- Si metrics vacio por filtro valido: mostrar estados vacios explicitos en graficos.
 
 ---
 
@@ -84,6 +95,11 @@ Notas de UX:
 - El input de threshold permite rango 0.01 a 1.0.
 - Si no hay filas, mostrar mensaje explicito de vacio.
 
+Renderizado condicional requerido:
+- Si loading=true: mostrar fila/celda de carga en la tabla.
+- Si rows.length===0: renderizar texto explicito de estado vacio (no ocultar panel ni tabla).
+- Si error!=null: mostrar error y mantener estructura del panel visible.
+
 ### 2. AlertsTable
 
 Responsabilidad:
@@ -97,6 +113,11 @@ Props:
 - rows: AlertTableRow[]
 - loading?: boolean
 - emptyMessage?: string
+
+Renderizado condicional requerido:
+- `loading` => fila unica con mensaje de carga.
+- `rows.length===0` => fila unica con `emptyMessage` (por defecto: "No anomalies detected for the current threshold.").
+- `rows.length>0` => render normal de filas.
 
 Tipo de fila sugerido:
 - AlertTableRow = {
@@ -149,6 +170,11 @@ APIs:
 - GET /api/metrics/categories/top?operation_type=income&limit=5&business_type=B2C
 - GET /api/metrics/facets
 
+Renderizado condicional requerido:
+- Si loading=true: mostrar estados de carga de ambas tablas y grafico.
+- Si solo una lista (B2B o B2C) esta vacia: su panel muestra estado vacio explicito; el otro panel y grafico siguen visibles.
+- Si ambas listas estan vacias: ambos paneles muestran estado vacio explicito y el grafico muestra barras en 0.
+
 ### 2. TopCategoriesTable
 
 Responsabilidad:
@@ -166,6 +192,12 @@ Columnas:
 - Categoria
 - Total de ingresos
 - % sobre total del grupo
+
+Renderizado condicional requerido por panel:
+- Panel B2B:
+  - Si `rows.length===0`, mostrar mensaje: "No category data available for B2B in the selected range.".
+- Panel B2C:
+  - Si `rows.length===0`, mostrar mensaje: "No category data available for B2C in the selected range.".
 
 ### 3. SegmentIncomeComparisonChart
 
