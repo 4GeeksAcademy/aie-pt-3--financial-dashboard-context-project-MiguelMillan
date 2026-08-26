@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { type MonthlyDataPoint } from '@/lib/financial-types'
+import { useId } from 'react'
 import {
   LineChart,
   Line,
@@ -37,6 +38,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="font-semibold text-foreground mb-1">{label}</p>
       <div className="flex items-center gap-2">
         <span
+          aria-hidden="true"
           className="inline-block h-2 w-2 rounded-full"
           style={{ backgroundColor: 'var(--chart-profit)' }}
         />
@@ -48,6 +50,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
+  const chartDescriptionId = useId()
+
   if (loading) {
     return (
       <Card className="border-border/60">
@@ -76,36 +80,41 @@ export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
             No data available to display
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v.toFixed(0)}%`}
-                width={40}
-                domain={['auto', 'auto']}
-              />
-              <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="4 4" />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="profitPercent"
-                name="profitPercent"
-                stroke="var(--chart-profit)"
-                strokeWidth={2}
-                dot={{ r: 3, fill: 'var(--chart-profit)', strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <figure aria-label="Monthly line chart for profit margin percentage" aria-describedby={chartDescriptionId}>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: 'var(--color-muted-foreground)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${v.toFixed(0)}%`}
+                  width={40}
+                  domain={['auto', 'auto']}
+                />
+                <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="4 4" />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="profitPercent"
+                  name="profitPercent"
+                  stroke="var(--chart-profit)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: 'var(--chart-profit)', strokeWidth: 0 }}
+                  activeDot={{ r: 5, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <figcaption id={chartDescriptionId} className="sr-only">
+              Profit margin percentage is plotted by month, including a zero reference line for positive and negative values.
+            </figcaption>
+          </figure>
         )}
       </CardContent>
     </Card>

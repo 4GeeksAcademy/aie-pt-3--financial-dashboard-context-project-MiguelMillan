@@ -351,7 +351,12 @@ function App() {
     range: DateRangeInputState,
     setRange: Dispatch<SetStateAction<DateRangeInputState>>,
     invalid: boolean,
-  ) => (
+  ) => {
+    const startDateId = "start-date-input";
+    const endDateId = "end-date-input";
+    const invalidRangeErrorId = "date-range-error";
+
+    return (
     <Card className="border-border/60">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold">{title}</CardTitle>
@@ -360,43 +365,54 @@ function App() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
+        <label htmlFor={startDateId} className="flex flex-col gap-1 text-sm">
           <span className="text-muted-foreground">Start date</span>
           <input
+            id={startDateId}
             type="date"
             value={range.start_date}
+            aria-invalid={invalid}
+            aria-describedby={invalid ? invalidRangeErrorId : undefined}
             onChange={(event) => {
               setRange((previous) => ({
                 ...previous,
                 start_date: event.target.value,
               }));
             }}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
+        <label htmlFor={endDateId} className="flex flex-col gap-1 text-sm">
           <span className="text-muted-foreground">End date</span>
           <input
+            id={endDateId}
             type="date"
             value={range.end_date}
+            aria-invalid={invalid}
+            aria-describedby={invalid ? invalidRangeErrorId : undefined}
             onChange={(event) => {
               setRange((previous) => ({
                 ...previous,
                 end_date: event.target.value,
               }));
             }}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
         </label>
 
         {invalid ? (
-          <p className="col-span-full rounded-md border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive-foreground">
+          <p
+            id={invalidRangeErrorId}
+            role="alert"
+            className="col-span-full rounded-md border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive-foreground"
+          >
             Start date must be before or equal to end date.
           </p>
         ) : null}
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   const renderTopCategoryTable = (title: string, rows: CategoryEntry[], totalIncome: number) => (
     <Card className="border-border/60">
@@ -407,6 +423,9 @@ function App() {
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">
+              {title}. Income totals and percentage share by category.
+            </caption>
             <thead>
               <tr className="border-b border-border/70 text-left text-muted-foreground">
                 <th className="px-2 py-2 font-medium">Category</th>
@@ -441,7 +460,14 @@ function App() {
   );
 
   return (
-    <main className="dark min-h-screen bg-background text-foreground">
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content" tabIndex={-1} className="dark min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-8">
           <DashboardHeader period={periodLabel} />
@@ -449,10 +475,11 @@ function App() {
           <section aria-label="Dashboard view selector" className="flex flex-wrap items-center gap-2">
             <button
               type="button"
+              aria-pressed={viewMode === "main"}
               onClick={() => {
                 setViewMode("main");
               }}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
                 viewMode === "main"
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
@@ -462,10 +489,11 @@ function App() {
             </button>
             <button
               type="button"
+              aria-pressed={viewMode === "comparison"}
               onClick={() => {
                 setViewMode("comparison");
               }}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
                 viewMode === "comparison"
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
@@ -476,7 +504,10 @@ function App() {
           </section>
 
           {error ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+            <div
+              role="alert"
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+            >
               {error}
             </div>
           ) : null}
@@ -511,14 +542,18 @@ function App() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col gap-4">
-                    <label className="flex max-w-xs flex-col gap-1 text-sm">
-                      <span className="text-muted-foreground">Threshold ratio (0.01 to 1.0)</span>
+                    <label htmlFor="alerts-threshold" className="flex max-w-xs flex-col gap-1 text-sm">
+                      <span id="alerts-threshold-hint" className="text-muted-foreground">
+                        Threshold ratio (0.01 to 1.0)
+                      </span>
                       <input
+                        id="alerts-threshold"
                         type="number"
                         min={0.01}
                         max={1}
                         step={0.01}
                         value={alertsThreshold}
+                        aria-describedby="alerts-threshold-hint"
                         onChange={(event) => {
                           const value = Number(event.target.value);
                           if (Number.isNaN(value)) {
@@ -527,18 +562,24 @@ function App() {
                           const clamped = Math.min(1, Math.max(0.01, value));
                           setAlertsThreshold(clamped);
                         }}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       />
                     </label>
 
                     {alertsError ? (
-                      <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive-foreground">
+                      <div
+                        role="alert"
+                        className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive-foreground"
+                      >
                         {alertsError}
                       </div>
                     ) : null}
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
+                        <caption className="sr-only">
+                          Outcome anomaly alerts including period totals, moving average baseline and increase percentage.
+                        </caption>
                         <thead>
                           <tr className="border-b border-border/70 text-left text-muted-foreground">
                             <th className="px-2 py-2 font-medium">Period</th>
@@ -587,7 +628,10 @@ function App() {
               )}
 
               {comparisonError ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground">
+                <div
+                  role="alert"
+                  className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive-foreground"
+                >
                   {comparisonError}
                 </div>
               ) : null}
@@ -609,7 +653,11 @@ function App() {
                   </CardHeader>
                   <CardContent>
                     {comparisonLoading ? (
-                      <div className="h-[280px] rounded-md border border-border/40 p-3 text-sm text-muted-foreground">
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="h-[280px] rounded-md border border-border/40 p-3 text-sm text-muted-foreground"
+                      >
                         Loading comparison data...
                       </div>
                     ) : (
@@ -649,7 +697,8 @@ function App() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 
