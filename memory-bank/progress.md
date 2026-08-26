@@ -125,3 +125,26 @@ Explicitly documented limitation:
 Checks after additional skill changes:
 - `npm run lint`: passed.
 - `npm run build`: passed.
+
+## Custom skill for this financial dashboard
+Created custom skill (project-specific):
+- `.skills/financial-dashboard-data-formatting/SKILL.md`
+
+Purpose:
+- Define reusable rules for monetary/percentage formatting and missing-data handling specific to this dashboard's financial UI.
+
+Loaded in agent-local skills catalog:
+- `.agents/skills/financial-dashboard-data-formatting/SKILL.md`
+
+Validation method used:
+- Ran a dedicated subagent validation to interpret the custom skill and generate an application guide against current code.
+- Validation confirmed objective and input mapping, and flagged ambiguities in scope.
+
+Validation outcome:
+- Ambiguities were resolved by refining the skill text (explicit exceptions for axis ticks, missing-value behavior in tooltips, and mandatory reuse of central helpers).
+- Final skill now has clearer acceptance criteria and actionable scope for future changes.
+
+Commits created during this task:
+- `fix: improve dashboard accessibility`
+- `perf: apply Next.js and Vercel best practices`
+- `chore: apply seo improvements`
