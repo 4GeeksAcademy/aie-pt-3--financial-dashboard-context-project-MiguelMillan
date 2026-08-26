@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { KPIRow } from "@/components/dashboard/kpi-row";
-import { IncomeOutcomeChart } from "@/components/dashboard/income-outcome-chart";
-import { ProfitPercentChart } from "@/components/dashboard/profit-percent-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type KPIMetrics,
@@ -27,15 +25,6 @@ import type {
   DateRangeFilter,
   TopCategoriesParams,
 } from "../specs/param-types";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 type ViewMode = "main" | "comparison";
 
@@ -52,6 +41,24 @@ interface AlertTableRow {
 }
 
 const DEFAULT_ALERT_THRESHOLD = 0.3;
+
+const IncomeOutcomeChart = lazy(() =>
+  import("@/components/dashboard/income-outcome-chart").then((module) => ({
+    default: module.IncomeOutcomeChart,
+  })),
+);
+
+const ProfitPercentChart = lazy(() =>
+  import("@/components/dashboard/profit-percent-chart").then((module) => ({
+    default: module.ProfitPercentChart,
+  })),
+);
+
+const B2BB2CIncomeChart = lazy(() =>
+  import("@/components/dashboard/b2b-b2c-income-chart").then((module) => ({
+    default: module.B2BB2CIncomeChart,
+  })),
+);
 
 function toRangeFilter(range: DateRangeInputState): DateRangeFilter {
   return {
@@ -130,7 +137,6 @@ function App() {
 
   useEffect(() => {
     let active = true;
-    setFacetsLoading(true);
     fetchFacets()
       .then((data) => {
         if (!active) {
@@ -158,16 +164,17 @@ function App() {
 
   useEffect(() => {
     if (hasInvalidRange(mainRange)) {
-      setError("La fecha de inicio no puede ser mayor que la fecha de fin.");
-      setMetrics(null);
-      setMonthlyData([]);
-      setMetricsLoading(false);
       return;
     }
 
     let active = true;
-    setMetricsLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+      setMetricsLoading(true);
+      setError(null);
+    });
 
     fetchMetrics(toRangeFilter(mainRange))
       .then((movements) => {
@@ -197,15 +204,17 @@ function App() {
 
   useEffect(() => {
     if (hasInvalidRange(mainRange)) {
-      setAlertsError("La fecha de inicio no puede ser mayor que la fecha de fin.");
-      setAlerts([]);
-      setAlertsLoading(false);
       return;
     }
 
     let active = true;
-    setAlertsLoading(true);
-    setAlertsError(null);
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+      setAlertsLoading(true);
+      setAlertsError(null);
+    });
 
     const params: AlertsParams = {
       threshold: alertsThreshold,
@@ -256,16 +265,17 @@ function App() {
 
   useEffect(() => {
     if (hasInvalidRange(comparisonRange)) {
-      setComparisonError("La fecha de inicio no puede ser mayor que la fecha de fin.");
-      setB2bTopCategories([]);
-      setB2cTopCategories([]);
-      setComparisonLoading(false);
       return;
     }
 
     let active = true;
-    setComparisonLoading(true);
-    setComparisonError(null);
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+      setComparisonLoading(true);
+      setComparisonError(null);
+    });
 
     const baseParams: Omit<TopCategoriesParams, "business_type"> = {
       operation_type: "income",
@@ -313,22 +323,13 @@ function App() {
     };
   }, [comparisonRange, facets]);
 
-  const b2bTotalIncome = useMemo(
-    () => b2bTopCategories.reduce((acc, item) => acc + item.total_amount, 0),
-    [b2bTopCategories],
-  );
-  const b2cTotalIncome = useMemo(
-    () => b2cTopCategories.reduce((acc, item) => acc + item.total_amount, 0),
-    [b2cTopCategories],
-  );
+  const b2bTotalIncome = b2bTopCategories.reduce((acc, item) => acc + item.total_amount, 0);
+  const b2cTotalIncome = b2cTopCategories.reduce((acc, item) => acc + item.total_amount, 0);
 
-  const comparisonChartData = useMemo(
-    () => [
-      { segment: "B2B", income: b2bTotalIncome },
-      { segment: "B2C", income: b2cTotalIncome },
-    ],
-    [b2bTotalIncome, b2cTotalIncome],
-  );
+  const comparisonChartData = [
+    { segment: "B2B", income: b2bTotalIncome },
+    { segment: "B2C", income: b2cTotalIncome },
+  ];
 
   const availableRangeLabel = facets
     ? `${facets.min_date} to ${facets.max_date}`
@@ -529,8 +530,32 @@ function App() {
                 aria-label="Financial charts"
                 className="grid grid-cols-1 gap-4 xl:grid-cols-2"
               >
-                <IncomeOutcomeChart data={monthlyData} loading={metricsLoading} />
-                <ProfitPercentChart data={monthlyData} loading={metricsLoading} />
+                <Suspense
+                  fallback={
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="h-[280px] rounded-md border border-border/40 p-3 text-sm text-muted-foreground"
+                    >
+                      Loading chart module...
+                    </div>
+                  }
+                >
+                  <IncomeOutcomeChart data={monthlyData} loading={metricsLoading} />
+                </Suspense>
+                <Suspense
+                  fallback={
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="h-[280px] rounded-md border border-border/40 p-3 text-sm text-muted-foreground"
+                    >
+                      Loading chart module...
+                    </div>
+                  }
+                >
+                  <ProfitPercentChart data={monthlyData} loading={metricsLoading} />
+                </Suspense>
               </section>
 
               <section aria-label="Anomaly alerts table" className="flex flex-col gap-4">
@@ -661,34 +686,19 @@ function App() {
                         Loading comparison data...
                       </div>
                     ) : (
-                      <ResponsiveContainer width="100%" height={280}>
-                        <BarChart data={comparisonChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.6} />
-                          <XAxis
-                            dataKey="segment"
-                            tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                          />
-                          <Tooltip
-                            formatter={(value) => {
-                              const numericValue =
-                                typeof value === "number"
-                                  ? value
-                                  : Number(Array.isArray(value) ? value[0] : value ?? 0);
-                              return formatCurrencyCompact(Number.isFinite(numericValue) ? numericValue : 0);
-                            }}
-                            labelFormatter={(label) => `Segment: ${label}`}
-                          />
-                          <Bar dataKey="income" fill="var(--chart-income)" radius={[8, 8, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
+                      <Suspense
+                        fallback={
+                          <div
+                            role="status"
+                            aria-live="polite"
+                            className="h-[280px] rounded-md border border-border/40 p-3 text-sm text-muted-foreground"
+                          >
+                            Loading chart module...
+                          </div>
+                        }
+                      >
+                        <B2BB2CIncomeChart data={comparisonChartData} />
+                      </Suspense>
                     )}
                   </CardContent>
                 </Card>

@@ -50,3 +50,37 @@ Main issues found in dashboard UI:
 - Apply `vercel-react-best-practices` recommendations that are applicable to this Vite React project; document non-applicable Next.js-specific guidance.
 - Run additional skill discovery (`performance`, `seo`) and apply one high-value extra skill.
 - Create and validate a custom dashboard-specific skill under `.skills/`.
+
+## Vercel/React best practices applied
+Skill source loaded and reviewed:
+- `.agents/skills/vercel-react-best-practices/SKILL.md`
+- `.agents/skills/vercel-react-best-practices/AGENTS.md`
+- Relevant rule files reviewed:
+  - `rules/bundle-dynamic-imports.md`
+  - `rules/async-suspense-boundaries.md`
+  - `rules/rerender-simple-expression-in-memo.md`
+
+Applied recommendations:
+- Dynamic imports for heavy chart modules:
+  - Main charts and comparison chart now use `React.lazy` + `Suspense` boundaries.
+  - Recharts bar chart logic moved into a lazily loaded component (`b2b-b2c-income-chart.tsx`).
+- Strategic suspense boundaries:
+  - Added accessible loading fallbacks while chart modules load.
+- Removed simple primitive/cheap derivations from unnecessary `useMemo` in `App.tsx`.
+- Refined effect update timing to avoid synchronous `setState` in effect body and satisfy current lint policy.
+
+Metadata work:
+- Updated SPA metadata in `frontend/index.html` with a meaningful `<title>` and `<meta name="description">`.
+
+Next.js-specific guidance explicitly not applicable here:
+- No Next.js runtime/router/pages/app router exists in this repo.
+- Therefore `next/image`, `next/font`, and Next metadata API patterns were not applied.
+- `<img>` migration was audited and no dashboard `<img>` tags were found in `frontend/src`.
+
+Check results after Vercel/React changes:
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `npm run test`: passed.
+
+Bundle impact observed:
+- Build output now shows multiple split chunks for chart modules rather than a single large app chunk.
