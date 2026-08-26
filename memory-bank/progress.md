@@ -84,3 +84,44 @@ Check results after Vercel/React changes:
 
 Bundle impact observed:
 - Build output now shows multiple split chunks for chart modules rather than a single large app chunk.
+
+## Additional skills exploration and selection
+Discovery commands executed:
+- `npx skills find performance`
+- `npx skills find seo`
+
+Topics discovered (sample of relevant results):
+- Performance:
+  - `addyosmani/web-quality-skills@performance`
+  - `addyosmani/agent-skills@performance-optimization`
+  - `affaan-m/ecc@react-performance`
+- SEO:
+  - `addyosmani/web-quality-skills@seo`
+  - `coreyhaines31/marketingskills@seo-audit`
+  - `affaan-m/ecc@seo`
+
+Selected additional skill:
+- `addyosmani/web-quality-skills@seo`
+
+Why it adds value for this dashboard:
+- The project is a public-facing SPA with a previously generic metadata baseline.
+- Better technical SEO metadata improves discoverability and sharing previews without changing app behavior.
+
+Skill loading command:
+- `npx skills add addyosmani/web-quality-skills@seo`
+
+Skill section applied:
+- On-page and technical metadata recommendations in `seo/SKILL.md` (title/description consistency, robots directives, social metadata, structured data).
+
+Changes implemented from the selected skill:
+- Added `robots` meta (`index, follow`).
+- Added Open Graph metadata (`og:type`, `og:locale`, `og:site_name`, `og:title`, `og:description`).
+- Added Twitter card metadata (`twitter:card`, `twitter:title`, `twitter:description`).
+- Added JSON-LD `WebApplication` structured data block.
+
+Explicitly documented limitation:
+- Canonical URL was not added because no production domain is defined in repository configuration; adding a placeholder canonical would be incorrect.
+
+Checks after additional skill changes:
+- `npm run lint`: passed.
+- `npm run build`: passed.
